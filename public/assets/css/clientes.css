@@ -1,0 +1,135 @@
+/*--------------------------------------------------------------
+# Sessão de CLIENTES (Portfólio de Logotipos)
+--------------------------------------------------------------*/
+.clients .client-logo {
+    padding: 25px;
+    text-align: center;
+    /* Usando variáveis de tema existentes */
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--surface-color);
+}
+
+.clients .client-logo img {
+    max-width: 80%;
+    opacity: 0.6;
+    transition: all 0.4s ease;
+    /*filter: grayscale(50%);*/
+}
+
+.clients .client-logo:hover {
+    border-color: var(--accent-color);
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-10px);
+}
+
+.clients .client-logo:hover img {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.20);
+}
+
+/* --------------------------------------------------------------
+    Botões de Filtro de Categorias (Bootstrap Override)
+-------------------------------------------------------------- */
+.clients .container .btn-outline-primary {
+    /* --- Estado Padrão (Inativo) --- */
+    --bs-btn-color: var(--accent-color);
+    /* Texto Azul */
+    --bs-btn-border-color: var(--accent-color);
+    /* Borda Azul */
+    --bs-btn-bg: transparent;
+    /* Fundo Transparente */
+
+    /* --- Estado Hover (Mouse em cima) --- */
+    --bs-btn-hover-color: var(--contrast-color);
+    /* Texto Branco */
+    --bs-btn-hover-bg: var(--accent-color);
+    /* Fundo Azul */
+    --bs-btn-hover-border-color: var(--accent-color);
+
+    /* --- Estado Ativo (.active) --- */
+    --bs-btn-active-color: var(--contrast-color);
+    /* Texto Branco */
+    --bs-btn-active-bg: var(--accent-color);
+    /* Fundo Azul Sólido */
+    --bs-btn-active-border-color: var(--accent-color);
+
+    /* Remove o foco azul padrão do navegador */
+    --bs-btn-focus-shadow-rgb: 1, 100, 178;
+    /* Tom do seu azul em RGB */
+
+    /* Ajustes finos de layout */
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.blue-background .row .cliente-card .client-logo {
+    background-color: var(--surface-color);
+    justify-content: center;
+}
+
+.dark-mode .blue-background .row .cliente-card .client-logo {
+    background-color: #ffffff;
+}
+
+.dark-mode .blue-background .row .cliente-card .client-logo {
+    background-color: #ffffff;
+}
+
+.dark-mode .blue-background .row .cliente-card .client-logo {
+    background-color: #ffffff;
+}
+
+/*--------------------------------------------------------------
+# TESTIMONIALS Section (Depoimentos)
+--------------------------------------------------------------*/
+.testimonials {
+    padding: 80px 0;
+    background-color: var(--background-color);
+}
+
+.testimonial-item {
+    padding: 30px;
+    border-radius: 15px;
+    background: var(--surface-color);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    min-height: 250px;
+}
+
+.testimonial-item .quote-icon {
+    font-size: 24px;
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+.testimonial-item p {
+    font-style: italic;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.testimonial-item .client-info h4 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--heading-color);
+}
+
+.testimonial-item .client-info span {
+    font-size: 14px;
+    color: color-mix(in srgb, var(--default-color), transparent 40%);
+}
+
+.testimonials .swiper-pagination {
+    margin-top: 30px;
+}

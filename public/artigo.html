@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Detalhes do Artigo | AM Consultoria de Alimentos</title>
+    <meta name="description"
+        content="Análise detalhada sobre Boas Práticas, Legislação ANVISA e tendências do setor de alimentos, trazida por especialistas da AM Consultoria.">
+    <meta name="keywords" content="blog, artigo, análise, BPF, RDC 216, segurança alimentar">
+
+    <link rel="icon" href="../assets/img/am-consultoria-icone.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="../assets/img/am-consultoria-icone.png" sizes="180x180" />
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
+    <link href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="../assets/vendor/aos/aos.css" rel="stylesheet">
+    <link href="../assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+    <link href="/assets/css/main.css" rel="stylesheet">
+    <link href="/assets/css/blog.css" rel="stylesheet" />
+</head>
+
+<body class="blog-details-page">
+
+    <div id="header-placeholder"></div>
+
+
+    <main class="main">
+
+        <div class="page-title">
+            <div class="heading">
+                <div class="container">
+                    <div class="row d-flex justify-content-center text-center">
+                        <div class="col-lg-8">
+
+                            <!-- TÍTULO -->
+                            <h1 id="article-title" class="heading-title"></h1>
+
+                            <!-- SUBTÍTULO / EXCERPT -->
+                            <p id="article-subtitle" class="article-subtitle"></p>
+
+                            <div class="article-meta-top">
+
+                                <!-- AUTOR -->
+                                <span><i class="bi bi-person-circle"></i>
+                                    <span id="article-author"></span>
+                                </span>
+
+                                <!-- DATA -->
+                                <span><i class="bi bi-calendar3"></i>
+                                    <span id="article-date"></span>
+                                </span>
+
+                                <!-- CATEGORIA -->
+                                <span><i class="bi bi-folder2"></i>
+                                    <span id="article-category"></span>
+                                </span>
+
+                                <!-- TEMPO DE LEITURA -->
+                                <span><i class="bi bi-clock"></i>
+                                    <span id="article-reading-time"></span>
+                                </span>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="breadcrumbs">
+                <div class="container">
+                    <ol>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../blog.html">Blog</a></li>
+                        <li class="current">Detalhes</li>
+                    </ol>
+                </div>
+            </nav>
+        </div>
+
+        <!-- LOADING DO ARTIGO -->
+        <div id="article-loading" class="article-loading active">
+            <div class="spinner"></div>
+            <p>Carregando artigo...</p>
+        </div>
+
+
+        <section id="blog-details" class="blog-details section">
+            <div class="container" data-aos="fade-up">
+
+                <!-- IMAGEM DE DESTAQUE -->
+                <div class="article-hero">
+                    <div class="hero-background">
+                        <img id="article-hero-image" src="" alt="Imagem de Destaque" class="hero-bg-image">
+                        <div class="hero-overlay"></div>
+                    </div>
+                </div>
+
+                <div class="article-body">
+
+                    <!-- SIDEBAR DE ÍNDICE GERADO AUTOMATICAMENTE -->
+                    <div class="sidebar-navigation" data-aos="fade-right">
+                        <div class="nav-sticky">
+                            <h3><i class="bi bi-list-ul"></i> Conteúdo</h3>
+
+                            <!-- Lista será preenchida pelo JS -->
+                            <ul id="article-index" class="content-nav"></ul>
+
+                            <div class="reading-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="progress-text">0% Concluído</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <main class="main-content">
+                        <!-- CONTEÚDO DO QUILL -->
+                        <section id="article-content" class="content-block" data-aos="fade-up"></section>
+                    </main>
+                </div>
+
+                <div class="article-actions" data-aos="fade-up">
+
+                    <div class="engagement-section">
+                        <div class="social-sharing">
+                            <h3>Compartilhe este Artigo</h3>
+                            <div class="share-options">
+
+                                <a href="#" class="share-btn facebook" data-share="facebook">
+                                    <i class="bi bi-facebook"></i>
+                                    <span>Facebook</span>
+                                </a>
+
+                                <a href="#" class="share-btn linkedin" data-share="linkedin">
+                                    <i class="bi bi-linkedin"></i>
+                                    <span>LinkedIn</span>
+                                </a>
+
+                                <a href="#" class="share-btn email" data-share="email">
+                                    <i class="bi bi-envelope"></i>
+                                    <span>E-mail</span>
+                                </a>
+
+                            </div>
+                        </div>
+
+                        <!-- AUTOR (PARTE INFERIOR) -->
+                        <div class="author-meta">
+                            <h3>Autor</h3>
+
+                            <div id="author-info" class="author-info-footer">
+                                <img id="author-photo" src="" alt="Foto do Autor" class="author-avatar-footer">
+
+                                <div class="author-details-footer">
+                                    <h4 id="author-name"></h4>
+                                    <span id="author-role"></span>
+
+                                    <div class="article-stats">
+                                        <span><i class="bi bi-calendar3"></i>
+                                            <span id="author-date"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAGS -->
+                        <div class="topic-tags">
+                            <h3>Tags Relacionadas</h3>
+                            <div id="article-tags" class="tag-cloud"></div>
+                        </div>
+
+                    </div>
+
+                </div>
+        </section>
+
+    </main>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    
+
+
+    <div id="whats-placeholder"></div>
+
+    <div id="footer-placeholder"></div>
+
+    <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
+    <div id="preloader"></div>
+
+    <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/vendor/php-email-form/validate.js"></script>
+    <script src="../assets/vendor/aos/aos.js"></script>
+    <script src="../assets/vendor/swiper/swiper-bundle.min.js"></script>
+    <script src="../assets/vendor/purecounter/purecounter_vanilla.js"></script>
+
+    <script type="module" src="../assets/js/article.js"></script>
+
+    <script src="../assets/js/headerScript.js"></script>
+    <script src="../assets/js/loadHeader.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/whatsapp.js"></script>
+    <script src="../assets/js/loadFooter.js"></script>
+
+</body>
+
+</html>
+
+<!-- <div class="future-outlook">
+                                <div class="outlook-item" data-aos="fade-left" data-aos-delay="100">
+                                    <div class="outlook-number">1º</div>
+                                    <div class="outlook-content">
+                                        <h4>Diagnóstico Completo</h4>
+                                        <p>Avaliação inicial do seu estabelecimento e mapeamento das não-conformidades.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="outlook-item" data-aos="fade-left" data-aos-delay="200">
+                                    <div class="outlook-number">2º</div>
+                                    <div class="outlook-content">
+                                        <h4>Plano de Ação</h4>
+                                        <p>Criação do plano de implementação de POPs e Manuais de BPF.</p>
+                                    </div>
+                                </div>
+
+                                <div class="outlook-item" data-aos="fade-left" data-aos-delay="300">
+                                    <div class="outlook-number">3º</div>
+                                    <div class="outlook-content">
+                                        <h4>Treinamento e Suporte</h4>
+                                        <p>Execução dos treinamentos e acompanhamento para vistoria final.</p>
+                                    </div>
+                                </div>
+                            </div> -->

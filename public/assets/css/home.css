@@ -1,0 +1,48 @@
+/*--------------------------------------------------------------
+# bLOG Section
+--------------------------------------------------------------*/
+.loader-mini {
+    width: 32px;
+    height: 32px;
+    border: 4px solid #ddd;
+    border-top-color: #0d6efd;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.latest-post-card {
+    transition: .2s ease;
+}
+
+.latest-post-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Garantir espaçamento visual */
+#latest-posts-container .col-lg-5 .compact-post + .compact-post {
+    margin-top: 0 !important;
+}
+
+#latest-posts-container .col-lg-5.d-flex.flex-column {
+    gap: 0.5rem !important; /* ou -0.5rem */
+}
+
+/* Quando houver apenas 1 compact-post */
+.compact-single {
+    height: auto !important;
+    padding: 15px 0;
+}
+
+/* Opcional: deixar visual mais elegante quando existe 1 só */
+.compact-single .thumb img {
+    max-height: 160px;
+    width: auto;
+    object-fit: cover;
+    border-radius: 10px;
+}

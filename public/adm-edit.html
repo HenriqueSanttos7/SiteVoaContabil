@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Painel ADM - Editar Artigo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- FAVICON -->
+    <link rel="icon" href="/assets/img/am-consultoria-icone.png" type="image/png">
+
+    <!-- BOOTSTRAP + ICONS + QUILL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <link href="/assets/css/sidebar.css" rel="stylesheet" />
+
+    <!-- SWEETALERT2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .panel-section {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .badge {
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 6px 12px;
+        }
+
+        #image-preview,
+        #author-photo-preview {
+            max-width: 250px;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        #publishBtn {
+            height: 56px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .article-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: #0d6efd;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #e9ecef;
+            border-top: 6px solid #0d6efd;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="sidebar"></div>
+
+    <div class="container">
+        <h1 class="mb-4 text-primary">
+            <i class="bi bi-pencil-square me-2"></i> Editar Artigo
+        </h1>
+
+        <div class="panel-section">
+            <h5>Título, Slug e Subtítulo</h5>
+            <label class="form-label">Título</label>
+            <input type="text" id="title" class="form-control" placeholder="Ex: Como implementar BPF na sua empresa">
+
+            <label class="form-label mt-2">Slug</label>
+            <input type="text" id="slug" class="form-control" readonly>
+
+            <label class="form-label mt-2">Subtítulo / Resumo</label>
+            <textarea id="excerpt" class="form-control" rows="2" placeholder="Breve descrição do artigo..."></textarea>
+
+            <label class="form-label mt-2">Data de Publicação</label>
+            <input type="date" id="date" class="form-control">
+        </div>
+
+        <div class="panel-section">
+            <h5>Autor</h5>
+            <label class="form-label">Nome do Autor</label>
+            <input type="text" id="author-name" class="form-control" placeholder="Ex: Ana Maria Silva">
+
+            <label class="form-label mt-2">Foto do Autor</label>
+            <input type="file" id="author-photo-input" accept="image/*" class="form-control">
+            <img id="author-photo-preview" alt="Preview da foto do autor">
+        </div>
+
+        <div class="panel-section">
+            <h5>Imagem de Capa</h5>
+            <input type="file" id="coverImage" accept="image/*" class="form-control">
+            <img id="image-preview" alt="Preview da capa">
+        </div>
+
+        <div class="panel-section">
+            <h5>Categorias</h5>
+            <input type="text" id="category-input" placeholder="Digite e pressione Enter" class="form-control">
+            <div id="category-container" class="mt-2"></div>
+
+            <h5 class="mt-3">Tags</h5>
+            <input type="text" id="tag-input" placeholder="Digite e pressione Enter" class="form-control">
+            <div id="tag-container" class="mt-2"></div>
+        </div>
+
+        <div class="panel-section">
+            <h5>Conteúdo do Artigo</h5>
+            <div id="quill-editor" style="height: 400px;"></div>
+        </div>
+
+        <!-- Spinner exatamente como no de publicar -->
+        <div id="publish-loading" class="article-loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Salvando alterações...</p>
+        </div>
+
+        <!-- Botão começa azul, vira verde no JS -->
+        <button id="publishBtn" class="btn btn-primary btn-lg w-100">
+            <i class="bi bi-check2-all me-2"></i> Publicar Artigo
+        </button>
+    </div>
+
+    <!-- SCRIPTS (ordem exata do seu padrão) -->
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.7/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Proteção contra perda de dados (sem SweetAlert ao trocar aba) -->
+    <script>
+        let isDirty = false;
+        const setDirty = () => isDirty = true;
+
+        document.addEventListener('input', setDirty);
+        document.addEventListener('change', setDirty);
+        document.addEventListener('paste', setDirty);
+        document.addEventListener('keyup', setDirty);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.quill) quill.on('text-change', setDirty);
+        });
+
+        // Intercepta links da sidebar
+        document.addEventListener('click', async e => {
+            const a = e.target.closest('a[href]');
+            if (!a) return;
+            const href = a.getAttribute('href');
+            if (!href || href.startsWith('http') || href.startsWith('#') || href.includes('mailto:')) return;
+
+            if (isDirty) {
+                e.preventDefault();
+                const r = await Swal.fire({
+                    title: 'Sair sem salvar?',
+                    text: 'Você tem alterações não salvas.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sair sem salvar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true
+                });
+                if (r.isConfirmed) {
+                    isDirty = false;
+                    location.href = href;
+                }
+            }
+        });
+
+        window.addEventListener('beforeunload', e => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    </script>
+
+    <script type="module" src="/assets/js/painel-adm-edit.js"></script>
+
+</body>
+
+</html>

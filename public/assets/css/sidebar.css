@@ -1,0 +1,106 @@
+/* =============================
+   SIDEBAR + LAYOUT DO PAINEL ADM
+   Este arquivo controla TODAS as páginas do painel
+   ============================= */
+
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background: #1f1f1f;
+    color: white;
+    padding: 25px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1050;
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    padding: 15px 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: 0.2s;
+    font-size: 15px;
+}
+
+.sidebar ul li:hover {
+    background: #333;
+}
+
+.sidebar ul li.active {
+    background: #0d6efd;
+    font-weight: 600;
+}
+
+/* Botão hamburger (mobile) */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 18px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background: white;
+    color: #1f1f1f;
+    font-size: 24px;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1100;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ================ LAYOUT DAS PÁGINAS ================ */
+.container {
+    transition: margin-left 0.3s ease;
+}
+
+/* Desktop */
+@media (min-width: 993px) {
+    .container {
+        margin-left: 260px !important;
+    }
+
+    .menu-toggle {
+        display: none !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .menu-toggle {
+        display: flex !important;
+    }
+
+    .container {
+        margin-left: 0 !important;
+        padding-top: 80px !important;
+    }
+}
