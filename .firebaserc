@@ -1,9 +1,0 @@
-{
-  "projects": {
-    "default": "qualisanam-f0afa",
-    "firebase use prod": "qualisanam-f0afa",
-    "amconsultoriaqualisan": "qualisanam-f0afa"
-  },
-  "targets": {},
-  "etags": {}
-}
