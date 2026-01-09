@@ -1,19 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  get,
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+import { getStorage, ref as sRef, getDownloadURL, list } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-storage.js";
 
-import {
-  getStorage,
-  ref as sRef,
-  getDownloadURL,
-} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-storage.js";
 
-/* ==========================================================
-    CONFIG FIREBASE 
-   ========================================================== */
+//CONFIG FIREBASE 
 const firebaseConfig = {
   apiKey: "AIzaSyCc7cboAR3IWLgd2Pt6qZWonAPTbHmK3qE",
   authDomain: "qualisanam-f0afa.firebaseapp.com",
@@ -27,11 +17,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const storage = getStorage(app, "gs://qualisanam-f0afa.firebasestorage.app");
+const storage = getStorage(app);
 
-/* ==========================================================
-   1) SKELETON LOADER — versão personalizada para INDEX
-   ========================================================== */
+
+const SITE_KEY = "voa"; // ou "voa"
+
+
+// 1) SKELETON LOADER
 function renderSkeletons() {
   return `
     <div class="col-lg-7">
@@ -55,18 +47,24 @@ function renderSkeletons() {
   `;
 }
 
-/* ==========================================================
-   2) CONVERTER OBJETOS DO FIREBASE EM POSTS
-   ========================================================== */
-async function formatPost(slug, a) {
-  let img = "/assets/img/blog/default.jpg";
 
-  if (a.featuredImage) {
-    try {
-      img = await getDownloadURL(sRef(storage, a.featuredImage));
-    } catch (e) {
-      console.warn("Imagem não carregou:", e);
+//2) CONVERTER OBJETOS DO FIREBASE EM POSTS
+async function formatPost(slug, a) {
+  let img = "/assets/img/blog/default.jpg"; // fallback
+  const folderPath = `${SITE_KEY}/articles/${slug}`;
+
+  try {
+    const folderRef = sRef(storage, folderPath);
+    const res = await list(folderRef); // lista todos os arquivos da pasta
+
+    // procura o primeiro arquivo que começa com "cover"
+    const coverFile = res.items.find(file => file.name.startsWith("cover"));
+
+    if (coverFile) {
+      img = await getDownloadURL(coverFile);
     }
+  } catch (e) {
+    console.warn("Imagem não carregou para slug:", slug, e);
   }
 
   return {
@@ -85,18 +83,16 @@ async function formatPost(slug, a) {
   };
 }
 
-/* ==========================================================
-   3) CARREGAR ARTIGOS PARA A HOME
-   ========================================================== */
+
+//3) CARREGAR ARTIGOS PARA A HOME
 async function loadLatestPosts() {
   const container = document.getElementById("latest-posts-container");
   if (!container) return;
 
-  // SKELETON entra primeiro
   container.innerHTML = renderSkeletons();
 
   try {
-    const snapshot = await get(ref(db, "articles"));
+    const snapshot = await get(ref(db, `sites/${SITE_KEY}/articles`));
     const data = snapshot.val();
 
     if (!data) {
@@ -104,47 +100,36 @@ async function loadLatestPosts() {
       return;
     }
 
-    // Formatando posts
-    const promises = Object.entries(data).map(([slug, post]) =>
-      formatPost(slug, post)
+    const posts = await Promise.all(
+      Object.entries(data).map(([slug, post]) =>
+        formatPost(slug, post)
+      )
     );
-    const posts = await Promise.all(promises);
 
-    // Ordena por data
     posts.sort((a, b) => b.dateValue - a.dateValue);
+    container.innerHTML = buildIndexLayout(posts.slice(0, 7));
 
-    // Pega somente os 6 mais recentes
-    const latest = posts.slice(0, 7);
-
-    // Render final com layout IGUAL ao seu HTML base
-    container.innerHTML = buildIndexLayout(latest);
   } catch (err) {
     console.error("Erro ao carregar posts da home:", err);
     container.innerHTML = "<p>Erro ao carregar artigos.</p>";
   }
 }
 
-/* ==========================================================
-   4) CONSTRUTOR DO LAYOUT — 100% IGUAL AO SEU TEMPLATE
-   ========================================================== */
+
+
+//4) CONSTRUTOR DO LAYOUT
 function buildIndexLayout(posts) {
-  // Quantos compact-posts existem (índices 1 e 2)
   window.__totalCompactPosts = posts.slice(1, 3).filter(Boolean).length;
 
   return `
-    <!-- POST DESTACADO -->
-    <div class="col-lg-7">
-      ${featuredPost(posts[0])}
-    </div>
+    <div class="col-lg-7">${featuredPost(posts[0])}</div>
 
-    <!-- POSTS COMPACTOS -->
     <div class="col-lg-5 d-flex flex-column gap-4">
       ${compactPost(posts[1])}
       ${compactPost(posts[2])}
       ${compactPost(posts[3])}
     </div>
 
-    <!-- 3 POSTS EM CARD -->
     <div class="col-lg-4 mt-4">${cardPost(posts[4])}</div>
     <div class="col-lg-4 mt-4">${cardPost(posts[5])}</div>
     <div class="col-lg-4 mt-4">${cardPost(posts[6])}</div>
@@ -152,38 +137,24 @@ function buildIndexLayout(posts) {
 }
 
 
-/* ==========================================================
-   COMPONENTES DO TEMPLATE
-   ========================================================== */
+// COMPONENTES DO TEMPLATE
 function featuredPost(p) {
   if (!p) return "";
 
   return `
-    <article class="featured-post position-relative h-100" 
-             style="cursor: pointer;" 
-             onclick="window.location='artigo.html?slug=${p.slug}'">
+    <article class="featured-post position-relative h-100"
+      onclick="window.location='artigo.html?slug=${p.slug}'">
       <figure class="featured-media m-0">
         <img src="${p.img}" class="img-fluid w-100" alt="${p.title}" />
       </figure>
-
       <div class="featured-content">
         <div class="date-badge">
           <span class="day">${formatDay(p.date)}</span>
           <span class="mon">${formatMonth(p.date)}</span>
         </div>
-
         <span class="cat-badge inverse">${p.categories[0] ?? ""}</span>
-
         <h3 class="title">${p.title}</h3>
         <p class="excerpt d-none d-md-block">${p.subtitle}</p>
-
-        <div class="meta d-flex align-items-center gap-3">
-          <div class="d-flex align-items-center">
-            <i class="bi bi-person"></i><span class="ps-2">${p.author}</span>
-          </div>
-        </div>
-
-        <!-- Botão continua existindo, mas agora é só visual -->
         <a class="readmore stretched-link">
           <span>Continuar Lendo</span><i class="bi bi-arrow-right"></i>
         </a>
@@ -195,28 +166,24 @@ function featuredPost(p) {
 function compactPost(p) {
   if (!p) return "";
 
-  const compactClass = window.__totalCompactPosts === 1
-    ? "compact-post compact-single"
-    : "compact-post h-100";
+  const compactClass =
+    window.__totalCompactPosts === 1
+      ? "compact-post compact-single"
+      : "compact-post h-100";
 
   return `
-    <article class="${compactClass}" 
-             style="cursor: pointer;" 
-             onclick="window.location='artigo.html?slug=${p.slug}'">
+    <article class="${compactClass}"
+      onclick="window.location='artigo.html?slug=${p.slug}'">
       <div class="thumb">
         <img src="${p.img}" class="img-fluid" alt="${p.title}">
       </div>
-
       <div class="content">
         <div class="meta">
           <span class="date">${formatShortDate(p.date)}</span>
           <span class="dot">•</span>
           <span class="category">${p.categories[0] ?? ""}</span>
         </div>
-
         <h4 class="title">${p.title}</h4>
-
-        <!-- Botão visual apenas -->
         <a class="readmore">
           <span>Ler Artigo</span><i class="bi bi-arrow-right"></i>
         </a>
@@ -225,21 +192,17 @@ function compactPost(p) {
   `;
 }
 
-
 function cardPost(p) {
   if (!p) return "";
 
   return `
-    <article class="card-post h-100" 
-             style="cursor: pointer;" 
-             onclick="window.location='artigo.html?slug=${p.slug}'">
+    <article class="card-post h-100"
+      onclick="window.location='artigo.html?slug=${p.slug}'">
       <div class="post-img">
         <img src="${p.img}" class="img-fluid w-100" alt="${p.title}">
       </div>
       <div class="content">
-        <div class="meta d-flex align-items-center flex-wrap gap-2">
-          <span class="cat-badge">${p.categories[0] ?? ""}</span>
-        </div>
+        <span class="cat-badge">${p.categories[0] ?? ""}</span>
         <h3 class="title">${p.title}</h3>
         <a class="readmore">
           <span>Ler Mais</span><i class="bi bi-arrow-right"></i>
@@ -249,25 +212,22 @@ function cardPost(p) {
   `;
 }
 
-/* ==========================================================
-   FORMATADORES DE DATA
-   ========================================================== */
+//FORMATADORES DE DATA
 function formatDay(date) {
-  const d = new Date(date);
-  return d.getDate().toString().padStart(2, "0");
+  return new Date(date).getDate().toString().padStart(2, "0");
 }
 
 function formatMonth(date) {
-  const d = new Date(date);
-  return d.toLocaleString("pt-BR", { month: "short" });
+  return new Date(date).toLocaleString("pt-BR", { month: "short" });
 }
 
 function formatShortDate(date) {
-  const d = new Date(date);
-  return d.toLocaleString("pt-BR", { day: "2-digit", month: "short" });
+  return new Date(date).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  });
 }
 
-/* ==========================================================
-   EXECUTAR
-   ========================================================== */
+
+// EXECUTAR
 loadLatestPosts();

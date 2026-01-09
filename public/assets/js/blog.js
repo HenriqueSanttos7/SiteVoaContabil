@@ -1,11 +1,9 @@
-// assets/js/blog.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getStorage, ref as sRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+import { listAll } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 
-// --------------------
-// CONFIG FIREBASE (seu)
-// --------------------
+// CONFIG FIREBASE 
 const firebaseConfig = {
     apiKey: "AIzaSyCc7cboAR3IWLgd2Pt6qZWonAPTbHmK3qE",
     authDomain: "qualisanam-f0afa.firebaseapp.com",
@@ -21,30 +19,28 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const storage = getStorage(app);
 
-// --------------------
-// SELECTORS (compatíveis com seu HTML)
-// --------------------
+// SELECTORS 
 const SELECTORS = {
     articlesContainer: "#articles-container",
     pagination: "#pagination",
     morePostsList: "#more-posts-list",
-    categoriesContainer: "#sidebar-categories",        // div onde vamos inserir <ul>
-    tagsContainer: "#sidebar-popular-tags",            // div .tag-cloud
-    loadingBox: "#search-loading",                     // seu spinner
+    categoriesContainer: "#sidebar-categories",
+    tagsContainer: "#sidebar-popular-tags",
+    loadingBox: "#search-loading",
     searchFormSelector: ".search-widget form"
 };
 
-// --------------------
+// SITE_KEY
+const SITE_KEY = "voa"; // ou "voa"
+
 // ESTADO
-// --------------------
 let allArticles = [];
 let filteredArticles = [];
 let currentPage = 1;
 const postsPerPage = 6;
 
-// --------------------
+
 // UTILITÁRIOS
-// --------------------
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 function escapeHtml(s) { if (s == null) return ""; return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;"); }
@@ -57,9 +53,8 @@ function formatDateDMY(dateString) {
 function showLoading() { const b = qs(SELECTORS.loadingBox); if (b) b.classList.add("active"); }
 function hideLoading() { const b = qs(SELECTORS.loadingBox); if (b) b.classList.remove("active"); }
 
-// --------------------
+
 // LOAD ARTICLES
-// --------------------
 async function loadArticles() {
     const container = qs(SELECTORS.articlesContainer);
 
@@ -74,7 +69,7 @@ async function loadArticles() {
     }
 
     try {
-        const snapshot = await get(ref(db, "articles"));
+        const snapshot = await get(ref(db, `sites/${SITE_KEY}/articles`));
         const data = snapshot?.val();
 
         if (!data || Object.keys(data).length === 0) {
@@ -89,14 +84,24 @@ async function loadArticles() {
         const list = [];
 
         for (const [slug, a] of entries) {
-            let img = "assets/img/blog/default.jpg";
+            let img = "/assets/img/blog/default.jpg";
 
-            if (a.featuredImage) {
-                try {
-                    img = await getDownloadURL(sRef(storage, a.featuredImage));
-                } catch (e) {
-                    console.warn("imagem não carregou para", slug, e);
+            try {
+                const coverRef = sRef(
+                    storage,
+                    `${SITE_KEY}/articles/${slug}`
+                );
+
+                const res = await listAll(coverRef);
+                const coverFile = res.items.find(i =>
+                    i.name.startsWith("cover")
+                );
+
+                if (coverFile) {
+                    img = await getDownloadURL(coverFile);
                 }
+            } catch (e) {
+                console.warn("Capa não carregou para:", slug, e);
             }
 
             list.push({
@@ -143,12 +148,7 @@ async function loadArticles() {
 }
 
 
-
-
-
-// --------------------
-// RENDER ARTCILES (pagina atual)
-// --------------------
+// RENDER ARTICLES 
 function renderArticlesPage() {
     const container = qs(SELECTORS.articlesContainer);
     if (!container) { console.warn("articles container não encontrado"); return; }
@@ -191,9 +191,8 @@ function renderArticlesPage() {
     }
 }
 
-// --------------------
+
 // PAGINATION
-// --------------------
 function renderPagination() {
     const pag = qs(SELECTORS.pagination);
     if (!pag) { console.warn("pagination element not found"); return; }
@@ -226,9 +225,8 @@ function renderPagination() {
     pag.appendChild(next);
 }
 
-// --------------------
+
 // SIDEBAR: MAIS ARTIGOS
-// --------------------
 function renderSidebarLatest() {
     const sidebar = qs(SELECTORS.morePostsList);
     if (!sidebar) { console.warn("#more-posts-list não encontrado"); return; }
@@ -248,9 +246,8 @@ function renderSidebarLatest() {
     });
 }
 
-// --------------------
-// SIDEBAR: CATEGORIAS (insere <ul> dentro da div #sidebar-categories)
-// --------------------
+
+// SIDEBAR: CATEGORIAS 
 function renderSidebarCategories(articles) {
     const containerDiv = qs(SELECTORS.categoriesContainer);
     if (!containerDiv) { console.warn("#sidebar-categories não encontrado"); return; }
@@ -276,9 +273,8 @@ function renderSidebarCategories(articles) {
     }
 }
 
-// --------------------
-// SIDEBAR: TAGS POPULARES (gera dentro de #sidebar-popular-tags .tag-cloud)
-// --------------------
+
+// SIDEBAR: TAGS POPULARES 
 function renderSidebarTags(articles) {
     const tagDiv = qs(SELECTORS.tagsContainer);
     if (!tagDiv) { console.warn("#sidebar-popular-tags não encontrado"); return; }
@@ -307,9 +303,8 @@ function renderSidebarTags(articles) {
     });
 }
 
-// --------------------
-// APLICAR FILTROS URL (?category=.. ?tag=..)
-// --------------------
+
+// APLICAR FILTROS URL 
 function applyURLFilters() {
     const params = new URLSearchParams(window.location.search);
     const category = params.get("category");
@@ -329,9 +324,8 @@ function applyURLFilters() {
     currentPage = 1;
 }
 
-// --------------------
-// SETUP SEARCH FORM (mantém layout: envia para search-results.html?q=...)
-// --------------------
+
+// SETUP SEARCH FORM 
 function setupSearchForm() {
     const form = qs(SELECTORS.searchFormSelector);
     if (!form) return;
@@ -342,9 +336,8 @@ function setupSearchForm() {
     });
 }
 
-// --------------------
+
 // INICIALIZAÇÃO
-// --------------------
 document.addEventListener("DOMContentLoaded", () => {
     setupSearchForm();
     loadArticles();

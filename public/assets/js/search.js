@@ -2,6 +2,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getStorage, ref as sRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+import { listAll } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
+
 
 const firebaseConfig = {
     apiKey: "AIzaSyCc7cboAR3IWLgd2Pt6qZWonAPTbHmK3qE",
@@ -18,9 +20,11 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const storage = getStorage(app);
 
-// ==========================
+// SITE_KEY
+const SITE_KEY = "voa"; // ou "voa"
+
+
 // FORMATAR DATA (d/m/y)
-// ==========================
 function formatDateDMY(dateString) {
     const date = new Date(dateString);
     if (isNaN(date)) return dateString;
@@ -32,15 +36,13 @@ function formatDateDMY(dateString) {
     });
 }
 
-// ==========================
 // INICIAR SEARCH
-// ==========================
 document.addEventListener("DOMContentLoaded", initializeBlogSearch);
 
 async function initializeBlogSearch() {
 
     const loading = document.getElementById("search-loading");
-    loading?.classList.add("active"); 
+    loading?.classList.add("active");
 
     const urlParams = new URLSearchParams(window.location.search);
     const searchTerm = urlParams.get("q")?.toLowerCase();
@@ -57,17 +59,16 @@ async function initializeBlogSearch() {
 
     const results = await searchArticlesFirebase(searchTerm);
 
-    loading?.classList.remove("active"); // 🔥 REMOVE O LOADING
+    loading?.classList.remove("active"); // 
 
     displayResults(results, resultsContainer, resultsCountElement, searchTerm);
 }
 
-// ==========================
+
 // BUSCA DIRETA NO FIREBASE
-// ==========================
 async function searchArticlesFirebase(searchTerm) {
     try {
-        const snapshot = await get(ref(db, "articles"));
+        const snapshot = await get(ref(db, `sites/${SITE_KEY}/articles`));
         const articles = snapshot.val();
 
         if (!articles) return [];
@@ -84,12 +85,24 @@ async function searchArticlesFirebase(searchTerm) {
             `.toLowerCase();
 
             if (searchable.includes(searchTerm)) {
-                let img = "assets/img/blog/default.jpg";
+                let img = "/assets/img/blog/default.jpg";
 
-                if (a.featuredImage) {
-                    try {
-                        img = await getDownloadURL(sRef(storage, a.featuredImage));
-                    } catch { }
+                try {
+                    const coverRef = sRef(
+                        storage,
+                        `${SITE_KEY}/articles/${slug}`
+                    );
+
+                    const res = await listAll(coverRef);
+                    const coverFile = res.items.find(i =>
+                        i.name.startsWith("cover")
+                    );
+
+                    if (coverFile) {
+                        img = await getDownloadURL(coverFile);
+                    }
+                } catch (e) {
+                    console.warn("Capa não carregou no search:", slug, e);
                 }
 
                 results.push({
@@ -112,9 +125,8 @@ async function searchArticlesFirebase(searchTerm) {
     }
 }
 
-// ==========================
+
 // EXIBIR RESULTADOS
-// ==========================
 function displayResults(results, container, countElement, term) {
     container.innerHTML = "";
 

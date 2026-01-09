@@ -2,6 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebas
 import { getDatabase, ref, set, push } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
 
 // CONFIGURAÇÃO FIREBASE
 const firebaseConfig = {
@@ -19,6 +21,9 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const storage = getStorage(app, "gs://qualisanam-f0afa.firebasestorage.app");
 const auth = getAuth(app);
+
+// SITE_KEY
+const SITE_KEY = "voa"; // ou "voa"
 
 signInAnonymously(auth).catch(err => console.error("Erro Auth:", err));
 
@@ -84,13 +89,20 @@ document.getElementById('author-photo-input').addEventListener('change', e => {
   }
 });
 
-// ===============================================
+
 // BOTÃO PUBLICAR – VERSÃO FINAL COM SWEETALERT2 + SEU SPINNER
-// ===============================================
 document.getElementById('publishBtn').addEventListener('click', async () => {
   const publishBtn = document.getElementById('publishBtn');
   const loadingOverlay = document.getElementById('publish-loading');
+  
 
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      console.log("UID logado no painel:", user.uid);
+    } else {
+      console.log("Nenhum usuário logado");
+    }
+  });
   // Validação simples
   const title = document.getElementById('title').value.trim();
   if (!title) {
@@ -128,10 +140,10 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
 
   try {
     if (coverFile) {
-      coverUrl = await uploadFile(coverFile, `articles/${slug}/cover_${Date.now()}_${coverFile.name}`);
+      coverUrl = await uploadFile(coverFile, `${SITE_KEY}/articles/${slug}/cover_${Date.now()}_${coverFile.name}`);
     }
     if (authorPhotoFile) {
-      authorPhotoUrl = await uploadFile(authorPhotoFile, `articles/${slug}/author_${Date.now()}_${authorPhotoFile.name}`);
+      authorPhotoUrl = await uploadFile(authorPhotoFile, `${SITE_KEY}/articles/${slug}/author_${Date.now()}_${authorPhotoFile.name}`);
     }
 
     const articleData = {
@@ -151,7 +163,7 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
       status: 'published'
     };
 
-    await set(ref(db, `articles/${slug}`), articleData);
+    await set(ref(db, `sites/${SITE_KEY}/articles/${slug}`), articleData);
 
     // Esconde spinner
     loadingOverlay.style.display = 'none';

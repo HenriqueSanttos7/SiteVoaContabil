@@ -1,5 +1,3 @@
-// /assets/js/painel-adm-edit.js
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getDatabase, ref as dbRef, get, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
@@ -21,6 +19,9 @@ const db = getDatabase(app);
 const storage = getStorage(app, "gs://qualisanam-f0afa.firebasestorage.app");
 const auth = getAuth(app);
 signInAnonymously(auth);
+
+// SITE_KEY
+const SITE_KEY = "voa"; // ou "voa"
 
 const quill = new Quill('#quill-editor', { theme: 'snow' });
 
@@ -46,6 +47,13 @@ const slug = urlParams.get('slug');
 if (!slug) {
   Swal.fire({ icon: "error", title: "Erro", text: "Abra com ?slug=seu-artigo" });
 }
+
+window.isDirty = false;
+
+document.addEventListener('input', () => {
+  window.isDirty = true;
+  publishBtn.disabled = false;
+});
 
 // === BADGES ===
 function createBadge(text, container) {
@@ -107,7 +115,7 @@ async function upload(file, prefix) {
 }
 
 async function load() {
-  const snap = await get(dbRef(db, `articles/${slug}`));
+  const snap = await get(dbRef(db, `sites/${SITE_KEY}/articles/${slug}`));
   if (!snap.exists()) {
     Swal.fire("Erro", "Artigo não encontrado", "error");
     return;
@@ -141,12 +149,13 @@ async function load() {
   publishBtn.innerHTML = '<i class="bi bi-check2-all me-2"></i> Salvar Alterações';
 
   window.isDirty = false;
+  publishBtn.disabled = true;
 }
 
 // === SALVAR ===
 publishBtn.onclick = async () => {
   if (!titleEl.value.trim()) return Swal.fire({ icon: 'warning', title: 'Título obrigatório' });
-
+  window.isDirty = false;
   publishBtn.disabled = true;
   loadingOverlay.style.display = 'flex';
 
@@ -154,11 +163,11 @@ publishBtn.onclick = async () => {
     const coverFile = coverInput.files[0];
     const authorFile = authorPhotoInput.files[0];
 
-    let coverPath = (await get(dbRef(db, `articles/${slug}/featuredImage`))).val() || '';
-    let authorPath = (await get(dbRef(db, `articles/${slug}/author/photoUrl`))).val() || '';
+    let coverPath = (await get(dbRef(db, `sites/${SITE_KEY}/articles/${slug}/featuredImage`))).val() || '';
+    let authorPath = (await get(dbRef(db, `sites/${SITE_KEY}/articles/${slug}/author/photoUrl`))).val() || '';
 
-    if (coverFile) coverPath = await upload(coverFile, `articles/${slug}/cover`);
-    if (authorFile) authorPath = await upload(authorFile, `articles/${slug}/author`);
+    if (coverFile) coverPath = await upload(coverFile, `${SITE_KEY}/articles/${slug}/cover`);
+    if (authorFile) authorPath = await upload(authorFile, `${SITE_KEY}/articles/${slug}/author`);
 
     const data = {
       title: titleEl.value.trim(),
@@ -172,11 +181,11 @@ publishBtn.onclick = async () => {
       updatedAt: new Date().toISOString()
     };
 
-    await set(dbRef(db, `articles/${slug}`), data);
+    await set(dbRef(db, `sites/${SITE_KEY}/articles/${slug}`), data);
 
     loadingOverlay.style.display = 'none';
     Swal.fire({ icon: 'success', title: 'Salvo!', text: 'Alterações aplicadas com sucesso' }).then(() => {
-      load(); // recarrega e limpa o dirty
+      load();
     });
 
   } catch (e) {

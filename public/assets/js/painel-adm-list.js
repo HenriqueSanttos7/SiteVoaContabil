@@ -1,14 +1,8 @@
-// /assets/js/listar-artigos.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import {
-    getDatabase,
-    ref,
-    get,
-    remove
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 /* ============== CONFIG FIREBASE ============== */
-/* Substitua pelos seus valores (usei os seus conforme enviado antes) */
 const firebaseConfig = {
     apiKey: "AIzaSyCc7cboAR3IWLgd2Pt6qZWonAPTbHmK3qE",
     authDomain: "qualisanam-f0afa.firebaseapp.com",
@@ -20,8 +14,18 @@ const firebaseConfig = {
     measurementId: "G-FN0NB403XG"
 };
 
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
+
+signInAnonymously(auth).catch(err => {
+    console.error("Erro auth:", err);
+});
+
+// SITE_KEY
+const SITE_KEY = "voa"; // ou "voa"
+
 /* ============================================= */
 
 const tableBody = document.getElementById("articles-table-body");
@@ -33,8 +37,8 @@ const nextBtn = document.getElementById("next-page");
 const pageInfo = document.getElementById("page-info");
 const perPageSelect = document.getElementById("per-page");
 
-let allArticles = [];     // array [{slug, title, date, categories, ...}, ...]
-let filtered = [];        // resultado após buscar+filtrar
+let allArticles = [];
+let filtered = [];
 let currentPage = 1;
 let itemsPerPage = parseInt(perPageSelect.value, 10);
 
@@ -53,7 +57,7 @@ function formatDateDMY(dateString) {
 async function loadAllArticles() {
     tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Carregando...</td></tr>`;
     try {
-        const snap = await get(ref(db, 'articles')); // ajuste para 'artigos' se for o seu nó
+        const snap = await get(ref(db, `sites/${SITE_KEY}/articles`)); // ajuste para 'artigos' se for o seu nó
         const val = snap.exists() ? snap.val() : null;
 
         allArticles = [];
@@ -165,10 +169,21 @@ function attachRowActions() {
     tableBody.querySelectorAll('.btn-delete').forEach(b => {
         b.onclick = async () => {
             const slug = b.dataset.slug;
-            if (!confirm(`Excluir o artigo "${slug}"? Essa ação não pode ser desfeita.`)) return;
+            const res = await Swal.fire({
+                title: 'Confirmar exclusão?',
+                text: `O artigo "${slug}" será removido permanentemente.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Excluir',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d'
+            });
+
+            if (!res.isConfirmed) return;
 
             try {
-                await remove(ref(db, `articles/${slug}`)); // ajusta nó se necessário
+                await remove(ref(db, `sites/${SITE_KEY}/articles/${slug}`)); // ajusta nó se necessário
                 // recarregar dados
                 await loadAllArticles();
             } catch (err) {

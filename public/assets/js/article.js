@@ -1,13 +1,9 @@
-// ==========================================
 // IMPORTS FIREBASE
-// ==========================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 import { getStorage, ref as sRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 
-// ==========================================
 // FIREBASE CONFIG
-// ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyCc7cboAR3IWLgd2Pt6qZWonAPTbHmK3qE",
   authDomain: "qualisanam-f0afa.firebaseapp.com",
@@ -21,11 +17,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const storage = getStorage(app, "gs://qualisanam-f0afa.firebasestorage.app");
+const storage = getStorage(app);
 
-// ==========================================
+// SITE_KEY
+const SITE_KEY = "voa"; // ou "voa"
+
 // HELPERS
-// ==========================================
 function formatDateBR(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -37,12 +34,39 @@ function formatDateBR(dateStr) {
   });
 }
 
-// ==========================================
+async function resolveImage({ fullPath, folderPath, startsWith }) {
+  try {
+    // URL já pronta
+    if (fullPath?.startsWith("http")) {
+      return fullPath;
+    }
+
+    // Caminho direto no storage
+    if (fullPath) {
+      return await getDownloadURL(sRef(storage, fullPath));
+    }
+
+    // Buscar por padrão (ex: cover-)
+    if (folderPath && startsWith) {
+      const { listAll } = await import(
+        "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js"
+      );
+      const res = await listAll(sRef(storage, folderPath));
+      const file = res.items.find(f => f.name.startsWith(startsWith));
+      if (file) return await getDownloadURL(file);
+    }
+  } catch (e) {
+    console.warn("Imagem não resolvida:", e);
+  }
+
+  return "";
+}
+
+
 // BUSCAR ARTIGO PELO SLUG
-// ==========================================
 async function fetchArticle(slug) {
   try {
-    const snap = await get(ref(db, "articles/" + slug));
+    const snap = await get(ref(db, `sites/${SITE_KEY}/articles/${slug}`));
     return snap.val();
   } catch (err) {
     console.error("Erro ao buscar artigo:", err);
@@ -50,25 +74,25 @@ async function fetchArticle(slug) {
   }
 }
 
-// ==========================================
 // PEGAR IMAGEM DO STORAGE
-// ==========================================
-async function getImg(path) {
+async function getImg(filePathOrUrl, slug = "") {
   try {
-    if (!path) return "";
-    return await getDownloadURL(sRef(storage, path));
+    if (!filePathOrUrl) return "";
+    // se já for URL completa
+    if (filePathOrUrl.startsWith("http")) return filePathOrUrl;
+
+    // monta caminho correto no Storage
+    const storagePath = slug ? `${SITE_KEY}/articles/${slug}/${filePathOrUrl}` : filePathOrUrl;
+    return await getDownloadURL(sRef(storage, storagePath));
   } catch (err) {
-    console.warn("Imagem não encontrada:", path);
+    console.warn("Imagem não encontrada:", filePathOrUrl, err);
     return "";
   }
 }
 
-// ==========================================
 // CARREGAMENTO PRINCIPAL
-// ==========================================
 document.addEventListener("DOMContentLoaded", async () => {
   const slug = new URLSearchParams(window.location.search).get("slug");
-
   if (!slug) return console.error("Nenhum slug encontrado.");
 
   toggleLoading(true);
@@ -79,28 +103,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     return console.error("Artigo não encontrado.");
   }
 
-  await renderArticle(article);
+  await renderArticle(article, slug);
 
   // TOC precisa rodar APÓS as imagens carregarem
-  setTimeout(() => {
-    generateTOC();
-  }, 250);
+  setTimeout(() => generateTOC(), 250);
 
   toggleLoading(false);
 });
 
-// ==========================================
 // RENDERIZAÇÃO DO ARTIGO
-// ==========================================
 async function renderArticle(data) {
 
-  // TITULO / SUBTITULO
-  document.getElementById("article-title").textContent = data.title;
-  document.getElementById("article-subtitle").textContent = data.subtitle;
+  const slug = new URLSearchParams(location.search).get("slug");
+
+  // TÍTULOS
+  document.getElementById("article-title").textContent = data.title ?? "";
+  document.getElementById("article-subtitle").textContent = data.subtitle ?? "";
 
   // AUTOR
-  document.getElementById("article-author").textContent = data.author?.name ?? "Autor desconhecido";
-  document.getElementById("author-name").textContent = data.author?.name ?? "";
+  const authorName = data.author?.name ?? "Autor desconhecido";
+  document.getElementById("article-author").textContent = authorName;
+  document.getElementById("author-name").textContent = authorName;
   document.getElementById("author-role").textContent = data.author?.role ?? "";
 
   // DATAS
@@ -108,40 +131,42 @@ async function renderArticle(data) {
   document.getElementById("author-date").textContent = formatDateBR(data.date);
 
   // CATEGORIA
-  document.getElementById("article-category").textContent = data.categories?.[0] ?? "";
+  document.getElementById("article-category").textContent =
+    data.categories?.[0] ?? "";
 
-  // FOTO DO AUTOR
+
+  // FOTO DO AUTOR 
   if (data.author?.photoUrl) {
-    const url = await getImg(data.author.photoUrl);
-    if (url) document.getElementById("author-photo").src = url;
-  }
+    const authorImg = await resolveImage({
+      folderPath: `${SITE_KEY}/articles/${slug}`,
+      startsWith: "author"
+    });
 
-  // IMAGEM DE DESTAQUE
-  if (data.featuredImage) {
-    document.getElementById("article-hero-image").src = await getImg(data.featuredImage);
-  }
-
-  // CONTEÚDO HTML
-  const articleContentEl = document.getElementById("article-content");
-  articleContentEl.innerHTML = data.contentHtml ?? "";
-
-  // PRE-CARREGAR IMAGENS INTERNAS
-  if (Array.isArray(data.innerImages)) {
-    for (const imgPath of data.innerImages) {
-      getImg(imgPath);
+    if (authorImg) {
+      document.getElementById("author-photo").src = authorImg;
     }
   }
 
-  // TEMPO DE LEITURA
-  calcReadingTime();
+  // CAPA DO ARTIGO 
+  const coverImg = await resolveImage({
+    folderPath: `${SITE_KEY}/articles/${slug}`,
+    startsWith: "cover"
+  });
 
-  // TAGS COMO LINKS
+  if (coverImg) {
+    document.getElementById("article-hero-image").src = coverImg;
+  }
+
+  // CONTEÚDO
+  document.getElementById("article-content").innerHTML =
+    data.contentHtml ?? "";
+
+  calcReadingTime();
   renderTags(data.tags);
 }
 
-// ==========================================
+
 // TAGS CLICÁVEIS
-// ==========================================
 function renderTags(tags) {
   const container = document.getElementById("article-tags");
   container.innerHTML = "";
@@ -157,20 +182,15 @@ function renderTags(tags) {
   });
 }
 
-// ==========================================
-// ÍNDICE (TOC) - VERSÃO ATUALIZADA
-// Substitui a função anterior generateTOC
-// ==========================================
-// =========================
+
 // TOC: truncate + generate + observer (pronto p/ colar)
-// =========================
 function truncateWords(text, words = 2) {
   const parts = (text || "").trim().split(/\s+/).filter(Boolean);
   return parts.length <= words ? parts.join(" ") : parts.slice(0, words).join(" ") + "…";
 }
-// =========================
+
+
 // TOC: generate + observer (fixes: inline arrow, truncation H2=2 H3=3, no auto-open)
-// =========================
 function generateTOC() {
   const content = document.getElementById("article-content");
   const toc = document.getElementById("article-index");
@@ -281,8 +301,6 @@ function generateTOC() {
       e.stopPropagation();
       const open = submenu.classList.toggle("open");
       if (arrow) arrow.classList.toggle("rotate", open);
-      // keep it manual: do not auto-open on scroll
-      // optional: scroll into view if opened
       if (open) btn.scrollIntoView({ block: "nearest", behavior: "smooth" });
     });
   });
@@ -291,9 +309,8 @@ function generateTOC() {
   initTOCProgress(headings);
 }
 
-// ============================
+
 // Observer + progress (no auto-open of submenu)
-// ============================
 function initTOCProgress(headings) {
   const tocLinks = document.querySelectorAll("#article-index .toc-link");
   const content = document.getElementById("article-content");
@@ -324,7 +341,6 @@ function initTOCProgress(headings) {
       ratioMap.set(id, entry.intersectionRatio);
     });
 
-    // choose id with largest ratio
     let bestId = null;
     let bestRatio = 0;
     ratioMap.forEach((ratio, id) => {
@@ -336,8 +352,6 @@ function initTOCProgress(headings) {
       currentActiveId = bestId;
       if (currentActiveId && linkById[currentActiveId]) {
         linkById[currentActiveId].classList.add("active");
-        // DO NOT auto-open submenu anymore — only highlight
-        // keep submenu state untouched (manual control)
         const activeLink = linkById[currentActiveId];
         const tocContainer = document.getElementById("article-index");
         if (tocContainer && activeLink) activeLink.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -349,7 +363,6 @@ function initTOCProgress(headings) {
     if (h.id) io.observe(h);
   });
 
-  // Progress (if elements exist)
   if (progressFill && progressText) {
     const contentTop = () => content.getBoundingClientRect().top + window.scrollY;
     const contentHeight = () => content.offsetHeight;
@@ -391,7 +404,6 @@ function initTOCProgress(headings) {
 // auto-init on DOMContentLoaded
 document.addEventListener("DOMContentLoaded", () => {
   generateTOC();
-  // mutation observer to regenerate if content inserted dynamically
   const content = document.getElementById("article-content");
   if (content) {
     const mo = new MutationObserver((mutations) => {
@@ -402,9 +414,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ==========================================
+
 // TEMPO DE LEITURA
-// ==========================================
 function calcReadingTime() {
   const el = document.getElementById("article-reading-time");
   const text = document.getElementById("article-content")?.innerText ?? "";
@@ -415,19 +426,16 @@ function calcReadingTime() {
 
 // === COMPARTILHAMENTO — VERSÃO QUE NUNCA FALHA ===
 document.addEventListener("DOMContentLoaded", () => {
-  // Garante que Swal existe antes de tocar nos botões
   if (typeof Swal === "undefined") {
     console.error("SweetAlert2 não carregou");
     return;
   }
 
-  // Remove qualquer listener antigo de uma vez por todas
   document.querySelectorAll("a[data-share]").forEach(btn => {
     const novo = btn.cloneNode(true);
     btn.replaceWith(novo);
   });
 
-  // Aplica o novo comportamento
   document.querySelectorAll("a[data-share]").forEach(btn => {
     btn.addEventListener("click", e => {
       e.preventDefault();
@@ -466,9 +474,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ==========================================
+
 // LOADING
-// ==========================================
 function toggleLoading(state) {
   const loader = document.getElementById("article-loading");
   if (!loader) return;

@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Envia via EmailJS
     emailjs
-      .send("service_0ykbwnp", "template_lj5sigh", formData)
+      .send("service_wilm00i", "template_sn792b4", formData)
       .then(() => {
         loading.classList.remove("d-block");
         successMsg.classList.add("d-block");
